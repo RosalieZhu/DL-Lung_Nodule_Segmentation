@@ -3,6 +3,8 @@
 
 Team R&R: Nanyan "Rosalie" Zhu (nz2305) & Chen "Raphael" Liu (cl3760)
 
+Please read our [report](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentation/blob/master/BMEN4000_Final_Project_Report_nz2305_cl3760.pdf) first
+
 ## Preprocessing
 1. Change your LUNA16 data directory in "prepeocessing" folder. "Processing_LungMask_ActiveContourBayesian_Part1_RunAll_Linux.m" generates preprocessed and segmented lung dicom scans, and "Processing_LungMask_ActiveContourBayesian_Part2_RunAll.m" generates lung nodule dicom scans.
 
