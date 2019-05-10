@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon May  6 18:11:50 2019
+
+@author: Nanayan "Rosalie" Zhu & Chen "Raphael" Liu, Columbia University
+"""
+import argparse
+import os
+from solver import Solver
+from data_loader import get_loader, prediction_loader
+from torch.backends import cudnn
+import random
+import numpy as np
+from glob import glob as glob
+import matplotlib.pyplot as plt
+
+
+majority_voting_threshold = 1 # We need more than 1 radiologist to confirm.
+augmentation_rate = 5 # 5 patches on one single claimed (x, y, z) nodule center.
+negative_patch_ratio = 0.25 # This will result in an overall positve-negative ratio of 80 % to 20 %.
+
+dataset_path = './dataset/Patches_with_nodules-' + '%d-%d-%.4f'%(majority_voting_threshold, augmentation_rate, negative_patch_ratio)
+
+class config():   
+    # model hyper-parameters
+    inverse_ratio = float(0.75)   #<----inverse ratio
+    image_size= int(32)
+    t = int(3) # t for Recurrent step of R2U_Net or R2AttU_Net'
+    img_ch = int(1)
+    output_ch = int(1)
+    num_epochs = int(60) #<----epoch
+    batch_size = int(1)
+    num_workers = int(1)
+    lr = float(0.002)
+    
+    optimizer_choice = 'SGD' #<----optimizer
+    
+    if optimizer_choice == 'Adam':
+        beta1 = float(0.5) # momentum1 in Adam
+        beta2 = float(0.999) # momentum2 in Adam
+    elif optimizer_choice == 'SGD':
+        momentum = float(0.9)
+    else:
+        print('No such optimizer available')
+    
+    augmentation_prob = float(0)
+    
+    
+    PPorLS = 'LS' # Use preprocessed scans or lung-segmented scans for training, validating and testing.
+
+    log_step = int(2)
+    val_step = int(2)
+    # validation frequency within epoch, [first epoch, other epoches]
+    val_freq_batch = [2000, 8000]
+
+    # misc
+    mode = 'test'
+    model_type = 'AttU_Net' # 'U_Net/R2U_Net/AttU_Net/R2AttU_Net'
+    model_path = './models/' + PPorLS + '_%d-%d-%.4f' % (majority_voting_threshold, augmentation_rate, negative_patch_ratio) + \
+    '/' + str(model_type) + '/' + str(optimizer_choice) + '/'
+    
+    if PPorLS == 'LS':
+        train_path = dataset_path + '/train/'
+        valid_path = dataset_path + '/valid/'
+        test_path = dataset_path + '/test/'
+        result_path = './results/LS_' + '%d-%d-%.4f' % (majority_voting_threshold, augmentation_rate, negative_patch_ratio) + \
+        '/' + str(model_type) + '/' + str(optimizer_choice) + '/'
+        result_img_path = './results/LS_' + '%d-%d-%.4f' % (majority_voting_threshold, augmentation_rate, negative_patch_ratio) + \
+        '/' + str(model_type) + '/' + str(optimizer_choice) + '/img/'
+    elif PPorLS == 'PP':
+        train_path = dataset_path + '/train_PP/'
+        valid_path = dataset_path + '/valid_PP/'
+        test_path = dataset_path + '/test_PP/'
+        result_path = './results/PP_' + '%d-%d-%.4f' % (majority_voting_threshold, augmentation_rate, negative_patch_ratio) + \
+        '/' + str(model_type) + '/' + str(optimizer_choice) + '/'
+        result_img_path = './results/PP_' + '%d-%d-%.4f' % (majority_voting_threshold, augmentation_rate, negative_patch_ratio) + \
+        '/' + str(model_type) + '/' + str(optimizer_choice) + '/img/'
+        
+    whole_slices_path = './dataset/All_slices_with_nodules/test/1.3.6.1.4.1.14519.5.2.1.6279.6001.185154482385982570363528682299_segmented_167.png'
+    
+    cuda_idx = int(1)
+        
+cudnn.benchmark = True
+
+if config.model_type not in ['U_Net','R2U_Net','AttU_Net','R2AttU_Net']:
+    print('ERROR!! model_type should be selected in U_Net/R2U_Net/AttU_Net/R2AttU_Net')
+    print('Your input for model_type was %s'%model_type)
+    
+if config.PPorLS == 'PP':
+    config.result_path = './results/LS_' + '%d-%d-%.4f' % (majority_voting_threshold, augmentation_rate, negative_patch_ratio) + \
+    '/' + str(config.model_type) + '/' + str(config.optimizer_choice) + '/'
+    config.result_img_path = './results/LS_' + '%d-%d-%.4f' % (majority_voting_threshold, augmentation_rate, negative_patch_ratio) + \
+    '/' + str(config.model_type) + '/' + str(config.optimizer_choice) + '/img/'
+elif config.PPorLS == 'PP':
+    config.result_path = './results/PP_' + '%d-%d-%.4f' % (majority_voting_threshold, augmentation_rate, negative_patch_ratio) + \
+    '/' + str(config.model_type) + '/' + str(config.optimizer_choice) + '/'
+    config.result_img_path = './results/PP_' + '%d-%d-%.4f' % (majority_voting_threshold, augmentation_rate, negative_patch_ratio) + \
+    '/' + str(config.model_type) + '/' + str(config.optimizer_choice) + '/img/'
+    
+train_loader = get_loader(image_path = config.train_path,
+                        image_size = config.image_size,
+                        batch_size = config.batch_size,
+                        num_workers = config.num_workers,
+                        mode = 'train',
+                        augmentation_prob = config.augmentation_prob,
+                        PPorLS = config.PPorLS)
+
+valid_loader = get_loader(image_path = config.valid_path,
+                        image_size = config.image_size,
+                        batch_size = config.batch_size,
+                        num_workers = config.num_workers,
+                        mode = 'valid',
+                        augmentation_prob = 0.,
+                        PPorLS = config.PPorLS)
+
+test_loader = get_loader(image_path = config.test_path,
+                        image_size = config.image_size,
+                        batch_size = config.batch_size,
+                        num_workers = config.num_workers,
+                        mode = 'test',
+                        augmentation_prob = 0.,
+                        shuffle = False,
+                        PPorLS = config.PPorLS)
+
+whole_slice_prediction_loader = prediction_loader(image_path = config.whole_slices_path)
+
+solver = Solver(config, train_loader, valid_loader, test_loader, whole_slice_prediction_loader)
+
+
+# %% normalization factors
+solver.test()
+nor_factor = [1/2000,1,2,3,4,5,6,7,8,9,10,11]
+nor_factor = nor_factor * 3
+
+
+# %% plot loss
+plt.rcParams['figure.figsize'] = [25, 20]
+plt.style.use('seaborn')
+validation_batch_loss_history = np.load(config.result_path + 'validation_batch_loss_history-0.0020.npy')
+plt.plot(validation_batch_loss_history/3737)
+train_batch_loss_history = np.load(config.result_path + 'train_batch_loss_history-0.0020.npy')
+print(train_batch_loss_history)
+plt.plot(train_batch_loss_history/2000./nor_factor[:len(train_batch_loss_history)])
+plt.legend(('validation loss', 'train loss'))
+#plt.xlim([0,11])
+plt.ylim([-0.6, 0])
+plt.title('Normalized train and validation loss (' + config.result_path[24:-5] + '&'+ config.PPorLS+ '&'+str(config.inverse_ratio)+')')
+plt.xlabel('batches (index)')
+plt.ylabel('Loss (RR_dice coefficient loss)')
+plt.show()
+
+# %% Plot generation block
+# The result id
+for id in range(300):
+    plt.rcParams['figure.figsize'] = [15, 12]
+    image_path = list(map(lambda x: os.path.join(config.test_path, x), os.listdir(config.test_path)))[id]
+    root = config.test_path
+    
+    if config.PPorLS == 'LS':
+        GT_paths = root[:-1]+'_GT/'
+    elif config.PPorLS == 'PP':
+        GT_paths = root[:-4]+'_GT/'
+    
+    if config.PPorLS == 'LS':
+        filename = image_path.split('/')[-1][:64]
+        location_and_extension = image_path.split('/')[-1][75:]
+    
+    else:
+        filename = image_path.split('/')[-1][:64]
+        location_and_extension = image_path.split('/')[-1][78:]
+    
+    GT_path = GT_paths + filename + '_GT_'+ location_and_extension
+    
+    SR = np.load(config.result_img_path + str(id) + '.npy')
+    
+    test_GT = plt.imread(GT_path)
+    test_img = plt.imread(image_path)
+    
+    print(image_path[-59:-4])
+    plt.rcParams['figure.figsize'] = [25, 12]
+    plt.subplot(1,3,1)
+    plt.imshow(SR, cmap = 'gray')
+    plt.axis('off')
+    plt.title('Predicted')
+    
+    plt.subplot(1,3,2)
+    plt.imshow(test_GT)
+    plt.axis('off')
+    plt.title('Ground Truth')
+    
+    plt.subplot(1,3,3)
+    plt.imshow(test_img)
+    plt.axis('off')
+    plt.title('Original Image')
+    
+    plt.suptitle(image_path[-59:-4], x=0., y=.95, horizontalalignment='center', verticalalignment='top', fontsize = 15)
+    
+    img_path_result = config.result_path + 'all_img/'+str(config.inverse_ratio)+'/'
+    if not os.path.exists(img_path_result):
+        os.makedirs(img_path_result)
+    
+    plt.savefig(img_path_result + str(id)+'.png' )
+    
+# %% convolutional layers activation map (has not finished yet, but will be implemented soom)
+activation = {}
+def get_activation(name):
+    def hook(model, input, output):
+        activation[name] = output.detach()
+    return hook
+
+model = solver
+unet_path = os.path.join(config.model_path, '%s-%d-%.4f-%.4f-%s-%s-%.4f.pkl' %(self.model_type,self.num_epochs,self.initial_lr,self.augmentation_prob, self.PPorLS, self.optimizer_choice, self.inverse_ratio))
+self.build_model()
+self.unet.load_state_dict(torch.load(unet_path))
+model.fc2.register_forward_hook(get_activation('fc2'))
+x = torch.randn(1, 25)
+output = model(x)
+print(activation['fc2'])
+
