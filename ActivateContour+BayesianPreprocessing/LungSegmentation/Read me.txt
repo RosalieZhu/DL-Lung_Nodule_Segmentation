@@ -1,0 +1,55 @@
+
+========================================================
+Lung Segmentation using Matlab
+========================================================
+Heewon Chung, a member of BAMI LAB.
+Last updated 2018.03.28 (March 28, 2018)
+========================================================
+
+================================================================================
+  1. Motivation
+================================================================================
+
+  This Lung Segmentation is based on Chanvese model.
+
+
+================================================================================
+  2. File contents
+================================================================================
+
+Folder name: CHANVESE
+
+  Matlab M file:
+		Chanvese_GlobalCode.m
+		Chanvese_InitPhi.m
+		Chanvese_Kappa.m
+		Chanvese_RegionAverage.m
+		DifferenceArea.m
+		EllipseAndCircularCorrelation.m
+		ExpandReduceCorrLung.m
+		FindAngle.m
+		FindContour.m
+		FindGlobalLung.m
+		FunctionInoutLungArea.m
+		FunctionSharpen.m
+		GetAngleImage.m
+		GetImageFromContour.m
+		LungSeparation.m
+		RemainAngleArea.m
+		RemoveContourArea.m	
+		ReadAllFiles.m
+	
+  Matlab data file:
+		lungData.m
+
+
+  Matlab example file:
+		ExampleCode.m
+		ExampleDetail.m
+
+  Document file:
+		Read me.TXT
+
+================================================================================
+
+
