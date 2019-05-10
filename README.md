@@ -12,7 +12,7 @@ Please read our [report](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentati
 2. "Radiologists_labels.ipynb" in visualization folder analyzed our oringinal scans and oringinal labels of radiologists. The ground truth labels were got from LIDC dataset converted by LIDCtoolbox in supplementary folder.
 
 ## Generate patches
-3. "scans_to_images.ipynb" generates patches for patch based U-Net family training.
+3. "scans_to_images.ipynb" in supplementary folder generates patches for patch based U-Net family training.
 
 ## Network
 4. Run "patch-based_Unet_main.ipynb" in Network folder to get models trained, and use "result_checking" (for different models) and "result_checking-inverserate" (for different inverse ratio $\lambda$ in our report) to check test statistics of those models.
