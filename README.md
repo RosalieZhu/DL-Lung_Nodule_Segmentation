@@ -19,4 +19,5 @@ Please read our [report](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentati
 
 ## Result
 ![](lung-segmented.gif)          ![](Seg_result.gif)
-Lung Segmented Scan                                                 Segmentation Result
+
+Lung Segmented Scan                                          Segmentation Result
