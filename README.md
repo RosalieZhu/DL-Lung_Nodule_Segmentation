@@ -17,5 +17,4 @@ Please read our [report](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentati
 ## Network
 4. Run [patch-based_Unet_main.ipynb](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentation/blob/master/Network/patch-based_Unet_main.ipynb) in Network folder to get models trained, and use [result_checking](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentation/blob/master/visulization/result_checking) (for different models) and [result_checking-inverserate](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentation/blob/master/visulization/result_checking-inverserate) (for different inverse ratio $\lambda$ in our report) to check [test statistics](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentation/blob/master/visulization/result_plot.ipynb) of those models.
 
-
-![](Nodule_GT.gif)
+![](Lung_Segmented.gif)          ![](Nodule_GT.gif)
