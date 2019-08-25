@@ -3,7 +3,7 @@
 
 Team R&R: Nanyan "Rosalie" Zhu & Chen "Raphael" Liu 
 
-Please read our [Paper](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentation/blob/master/End_to_End_Lung_Nodule_Segmentation_and_Visualization_in_Computed_Tomography_using_Attention_U_Net.pdf) first
+Please read our [Paper](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentation/blob/master/End-to-End%20Lung%20Nodule%20Segmentation%20and%20Visualization%20in%20Computed%20Tomography%20using%20Attention%20U-Net.pdf) first
 
 ## Preprocessing
 1. Change your LUNA16 data directory in "prepeocessing" folder. [Processing_LungMask_ActiveContourBayesian_Part1_RunAll_Linux.m](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentation/blob/master/ActivateContour%2BBayesianPreprocessing/Processing_LungMask_ActiveContourBayesian_Part1_RunAll_Linux.m) generates preprocessed and segmented lung dicom scans, and [Processing_LungMask_ActiveContourBayesian_Part2_RunAll.m](https://github.com/RosalieZhu/DL-Lung_Nodule_Segmentation/blob/master/ActivateContour%2BBayesianPreprocessing/Processing_LungMask_ActiveContourBayesian_Part2_RunAll.m) generates lung nodule dicom scans.
